@@ -1,0 +1,223 @@
+{#
+/**
+ * @file
+ * Default theme implementation to display a video element section
+#}
+{%
+  set classes = [
+    'paragraph',
+    'paragraph--type--' ~ paragraph.bundle|clean_class,
+    view_mode ? 'paragraph--view-mode--' ~ view_mode|clean_class,
+  ]
+%}
+{% block paragraph %}
+  <div{{ attributes.addClass(classes) }}>
+    {% block content %}
+    <section class="video-module-hero">
+    <div class="row">
+      <section class="video-module text-align-{{ content.field_align.0 }}">
+        <div class="video-module__video-container">
+          <div  class="video-module__video">{{ content.field_video_url.0['#url'] }}</div>
+        </div> 
+        <div class="video-module__image-container video-module__overlay bg-{{ content.field_color_overlay.0 }}-before">
+          <img class="video-module__image" src="{{ content.field_hero_image.0 }}" alt="video image">
+          <span class="video-module__playhead"></span>
+        </div>
+        <div class="video-module__copy bg-{{ content.field_color_overlay.0 }} ">
+              <div class="video-text__content">
+                  {{ content.field_superscript_headline.0 }}
+              </div>
+              <h2 class="video-text__h2">
+                  {{ content.field_title.0 }}
+              </h2>
+              <h5 class="video-text__h5">
+                  {{ content.field_caption_block.0 }}
+              </h5>
+        </div>
+      </section>
+    </div>
+    </section>
+    {% endblock %}
+  </div>
+{% endblock paragraph %}
+
+
+<!-- The following js adds functionality to the video div.  The field output 
+
+//Handle ID    
+
+function YTHandler () {
+
+  this.__construct = function() {
+
+    this.videoModules = document.querySelectorAll('.video-module');
+
+    this.timeout = null;
+
+  
+
+    //no modules, do nothing
+
+    if(this.videoModules.length <= 0){
+
+      return false;
+
+    }
+
+    
+
+    this.listenForYTAPI();
+
+  }
+
+  
+
+  this.listenForYTAPI = function (){
+
+    if(window.YT && window.YT.loaded){
+
+      this.setUpPlayers();
+
+      clearTimeout(this.timeout);
+
+    } else {
+
+      this.timeout = setTimeout(this.listenForYTAPI.bind(this), 100);
+
+    }
+
+  }
+
+  
+
+  this.setUpPlayers = function () {
+
+    var i, il;
+
+    for(i = 0, il = this.videoModules.length; i < il; i++){
+
+      new videoModule(this.videoModules[i]);
+
+    }
+
+  }
+
+  
+
+  this.__construct();
+
+}
+
+
+
+function videoModule (module) {
+
+  this.discover = function() {
+
+    this.pauseTimeout = null;
+
+    this.videoEl = module.querySelector('.video-module__video');
+
+    this.videoContainer = module.querySelector('.video-module__video-container');
+
+    this.playhead = module.querySelector('.video-module__playhead');
+
+    this.player = new YT.Player(this.videoEl.id, {
+
+      height: '390',
+
+      width: '640',
+
+      playerVars: {
+
+        poster: false,
+
+        thumbnail: false,
+
+        modestbranding: 1,
+
+        rel: 0,
+
+        showinfo: 0
+
+      },
+
+      videoId: this.videoEl.id,
+
+      events : {
+
+        onReady: this.listen.bind(this),
+
+        onStateChange: this.handleStateChange.bind(this)
+
+      }
+
+    });
+
+  }
+
+  
+
+  this.listen = function() {
+
+    this.playhead.addEventListener('click', this.playVideo.bind(this))
+
+  }
+
+  
+
+  this.playVideo = function() {
+
+    this.videoContainer.classList.add('active');
+
+    this.player.playVideo();
+
+  }
+
+  
+
+  this.handleStateChange = function(stateObject) {
+
+    var state = stateObject.data;
+
+    
+
+    if(state === 0 || state === 2){
+
+      this.stopped = true;
+
+      this.pauseTimeout = setTimeout(function() {
+
+        if(this.stopped){
+
+          this.videoContainer.classList.remove('active');
+
+        }
+
+      }.bind(this), 100)
+
+    } else {
+
+       this.stopped = false;
+
+    }
+
+  }
+
+  
+
+  this.discover();
+
+  this.listen();
+
+}
+
+
+
+$.getScript("https://www.youtube.com/iframe_api");
+
+
+
+new YTHandler();
+
+
